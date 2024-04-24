@@ -1,12 +1,11 @@
 package ua.com.dxrkness.testtask.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import ua.com.dxrkness.testtask.UserRepository;
 import ua.com.dxrkness.testtask.entity.User;
 import ua.com.dxrkness.testtask.service.UserService;
@@ -36,5 +35,18 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(userService.findAllUsers(), HttpStatus.OK);
+    }
+
+    @PostMapping
+    public ResponseEntity<String> addUser(@RequestBody @Valid User userToAdd, BindingResult bindingResult) {
+        try {
+            if (bindingResult.hasErrors()) {
+                throw new IllegalArgumentException("Check the correctness of user data");
+            }
+            userService.addNewUser(userToAdd);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("User was successfully added", HttpStatus.OK);
     }
 }

@@ -16,8 +16,10 @@ import java.time.LocalDateTime;
 @Entity(name = "\"user\"") // since H2 has reserved user keyword
 public class User {
     @Id
-    @NotNull
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @NotNull
+    @NotBlank
     @Email
     private String email;
     @NotNull
