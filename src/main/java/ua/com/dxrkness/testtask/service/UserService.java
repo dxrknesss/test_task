@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Service
 public class UserService {
@@ -24,11 +25,15 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    public User findUserById(Long id) throws NoSuchElementException {
+        return userRepository.findById(id).orElseThrow();
+    }
+
     public List<User> findAllUsers() {
         return userRepository.findAll();
     }
 
-    public List<User> findAllUsersByBirthDateBetween(Map<String, String> inputDateTime) {
+    public List<User> findAllUsersByBirthDateBetween(Map<String, String> inputDateTime) throws IllegalArgumentException {
         LocalDateTime from, to;
         from = LocalDateTime.parse(inputDateTime.get("from"));
         to = LocalDateTime.parse(inputDateTime.get("to"));
@@ -38,7 +43,7 @@ public class UserService {
         throw new IllegalArgumentException("There was an error parsing birth dates");
     }
 
-    public void addNewUser(User userToAdd) {
+    public void addNewUser(User userToAdd) throws IllegalArgumentException {
         var now = LocalDateTime.now();
         if (userToAdd.getBirthDate().isBefore(now)) {
             long userAge = ChronoUnit.YEARS.between(userToAdd.getBirthDate(), now);
@@ -54,5 +59,9 @@ public class UserService {
             return;
         }
         throw new IllegalArgumentException("User birth date is illegal");
+    }
+
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
     }
 }
