@@ -96,7 +96,9 @@ public class UserService {
                     if (updatedField.equals("address")) {
                         newValue = jsonObjectMapper.treeToValue(updatedUserFields.get(updatedField), Address.class);
                         // set id as in the old user's object, so the new record won't be created in the DB
-                        ((Address)newValue).setId(userToUpdate.getAddress().getId());
+                        if (userToUpdate.getAddress() != null) {
+                            ((Address)newValue).setId(userToUpdate.getAddress().getId());
+                        }
                     }
                     changeFieldValue(userClassFields.get(updatedField), userToUpdate, newValue);
                 }

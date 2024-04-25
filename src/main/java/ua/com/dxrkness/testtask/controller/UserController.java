@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ua.com.dxrkness.testtask.entity.User;
 import ua.com.dxrkness.testtask.service.UserService;
 
@@ -30,7 +31,7 @@ public class UserController {
         try {
             return ResponseEntity.ok(userService.findUserById(id));
         } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User wasn't found by id", e);
         }
     }
 
@@ -38,10 +39,10 @@ public class UserController {
     public ResponseEntity<List<User>> findAllUsers(@RequestBody(required = false) Map<String, String> inputDateTime) {
         try {
             if (inputDateTime != null) {
-                return new ResponseEntity<>(userService.findAllUsersByBirthDateBetween(inputDateTime), HttpStatus.OK);
+                return ResponseEntity.ok(userService.findAllUsersByBirthDateBetween(inputDateTime));
             }
         } catch (DateTimeParseException | IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
         return ResponseEntity.ok(userService.findAllUsers());
     }
@@ -53,8 +54,8 @@ public class UserController {
                 throw new IllegalArgumentException("Check the correctness of user data");
             }
             userService.addNewUser(userToAdd);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (IllegalArgumentException | DateTimeParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
         return ResponseEntity.ok("User was successfully added");
     }
@@ -67,8 +68,8 @@ public class UserController {
             userToUpdate = userService.findUserById(id);
             userService.updateUser(userToUpdate, updatedUserFields);
         }
-        catch(NoSuchElementException | IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        catch(NoSuchElementException | IllegalArgumentException | DateTimeParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
         return ResponseEntity.ok(String.format("User's №%d fields were successfully updated", id));
     }
