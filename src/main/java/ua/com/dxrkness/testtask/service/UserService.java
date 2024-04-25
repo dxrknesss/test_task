@@ -1,11 +1,15 @@
 package ua.com.dxrkness.testtask.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ua.com.dxrkness.testtask.UserRepository;
+import ua.com.dxrkness.testtask.entity.Address;
 import ua.com.dxrkness.testtask.entity.User;
 
 import java.lang.reflect.Field;
@@ -22,6 +26,7 @@ public class UserService {
     private UserRepository userRepository;
     @Value("${min-user-age}")
     private int minimumUserAge;
+    private ObjectMapper jsonObjectMapper = new ObjectMapper();
 
     @Autowired
     public UserService(UserRepository userRepository) {
@@ -77,20 +82,28 @@ public class UserService {
         field.setAccessible(false);
     }
 
-    public void updateUser(User userToUpdate, Map<String, String> updatedUserFields) {
+    public void updateUser(User userToUpdate, ObjectNode updatedUserFields) throws IllegalArgumentException {
         var userClassFields = Arrays.stream(User.class.getDeclaredFields())
                 .collect(Collectors.toMap(Field::getName, field -> field));
-        try {
-            for (String updatedField : updatedUserFields.keySet()) {
+
+        updatedUserFields.fieldNames().forEachRemaining(updatedField -> {
+            try {
                 if (userClassFields.containsKey(updatedField)) {
-                    Object newValue = updatedUserFields.get(updatedField);
+                    Object newValue = updatedUserFields.get(updatedField).asText();
                     if (updatedField.equals("birthDate")) {
                         newValue = LocalDateTime.parse((String) newValue);
                     }
+                    if (updatedField.equals("address")) {
+                        newValue = jsonObjectMapper.treeToValue(updatedUserFields.get(updatedField), Address.class);
+                        // set id as in the old user's object, so the new record won't be created in the DB
+                        ((Address)newValue).setId(userToUpdate.getAddress().getId());
+                    }
                     changeFieldValue(userClassFields.get(updatedField), userToUpdate, newValue);
                 }
+            } catch (IllegalAccessException | JsonProcessingException e) {
+                throw new IllegalArgumentException("There was an error while processing updated user fields!");
             }
-        } catch (IllegalAccessException e) { }
+        });
         validateUser(userToUpdate);
 
         userRepository.save(userToUpdate);

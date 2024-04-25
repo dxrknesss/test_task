@@ -1,5 +1,6 @@
 package ua.com.dxrkness.testtask.controller;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -60,7 +61,7 @@ public class UserController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<String> updateUserFields(@PathVariable(name = "id") Long id,
-                                                   @RequestBody Map<String, String> updatedUserFields) {
+                                                   @RequestBody ObjectNode updatedUserFields) {
         User userToUpdate;
         try {
             userToUpdate = userService.findUserById(id);
