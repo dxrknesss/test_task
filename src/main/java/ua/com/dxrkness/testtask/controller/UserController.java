@@ -68,7 +68,7 @@ public class UserController {
             userToUpdate = userService.findUserById(id);
             userService.updateUser(userToUpdate, updatedUserFields);
         }
-        catch(NoSuchElementException | IllegalArgumentException | DateTimeParseException e) {
+        catch(Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
         return ResponseEntity.ok(String.format("User's №%d fields were successfully updated", id));

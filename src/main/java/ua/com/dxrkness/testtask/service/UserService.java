@@ -90,6 +90,9 @@ public class UserService {
             try {
                 if (userClassFields.containsKey(updatedField)) {
                     Object newValue = updatedUserFields.get(updatedField).asText();
+                    if (updatedField.equals("id")) {
+                        return;
+                    }
                     if (updatedField.equals("birthDate")) {
                         newValue = LocalDateTime.parse((String) newValue);
                     }
